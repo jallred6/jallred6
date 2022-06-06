@@ -1,0 +1,70 @@
+---
+title: "KC 2021 Players"
+author: "Jacob Allred"
+date: "1/14/2022"
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggrepel)
+library(ggimage)
+library(nflfastR)
+library(gt)
+library(gtExtras)
+options(scipen = 9999)
+```
+
+```{r}
+data <- load_pbp(2021)
+```
+
+
+```{r}
+ data %>%
+  filter(posteam == "KC", rush == 1 ) %>%
+  group_by(rusher) %>%
+  summarise(plays = n(), mean_epa = round(mean(epa),3), total_epa = round(sum(epa),1), mean_yards = round(mean(yards_gained),1), series_success = round(mean(series_success),2), .groups = "drop") %>%
+  arrange(-plays) %>%
+  filter(plays > 20) %>%
+  gt() %>%
+    tab_header(title = "2021 KC Rushers usage and efficiency") %>% 
+  gt_theme_espn() 
+
+
+
+
+```
+
+```{r}
+ data %>%
+  filter(posteam == "KC", pass == 1 ) %>%
+  group_by(receiver) %>%
+  summarise(plays = n(), mean_epa = round(mean(epa),3), total_epa = round(sum(epa),1), mean_yards = round(mean(yards_gained),1), series_success = round(mean(series_success),2), .groups = "drop") %>%
+  arrange(-plays) %>%
+  filter(plays > 20) %>%
+  gt() %>%
+  gt_theme_espn() %>%
+  tab_header(title = "2021 KC Receivers usage and efficiency")
+
+```
+
+
+
+```{r}
+
+ data %>%
+  filter(pass == 1, is.na(yards_gained) == FALSE, is.na(epa) == FALSE, season_type == "REG") %>%
+  group_by(passer) %>%
+  summarise( plays = n(), mean_epa = round(mean(epa),3), mean_yards = round(mean(yards_gained),1), .groups = "drop") %>%
+  arrange(-plays) %>%
+  filter(plays > 100) %>%
+  gt() %>%
+  gt_theme_espn() %>%
+  tab_header(title = "2021 Regular Season Qbs usage and efficiency")
+
+
+```
+
