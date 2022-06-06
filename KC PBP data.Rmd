@@ -14,56 +14,118 @@ library(ggimage)
 library(nflfastR)
 library(gt)
 library(gtExtras)
+
 options(scipen = 9999)
 ```
 
 ```{r}
 data <- load_pbp(2021)
+
 ```
 
 
-```{r}
- data %>%
-  filter(posteam == "KC", rush == 1 ) %>%
+```{r message=FALSE, warning=FALSE}
+data %>%
+  filter(posteam == "KC", rush == 1) %>%
   group_by(rusher) %>%
-  summarise(plays = n(), mean_epa = round(mean(epa),3), total_epa = round(sum(epa),1), mean_yards = round(mean(yards_gained),1), series_success = round(mean(series_success),2), .groups = "drop") %>%
+  summarise(
+    plays = n(),
+    mean_epa = round(mean(epa), 3),
+    total_epa = round(sum(epa), 1),
+    mean_yards = round(mean(yards_gained), 1),
+    series_success = round(mean(series_success), 2),
+    .groups = "drop"
+  ) %>%
   arrange(-plays) %>%
   filter(plays > 20) %>%
   gt() %>%
-    tab_header(title = "2021 KC Rushers usage and efficiency") %>% 
-  gt_theme_espn() 
+  tab_header(title = "2021 KC Rushers usage and efficiency") %>%
+  gt_theme_espn()
+
+rushers <- data %>%
+  filter(#posteam == "KC", 
+    rush == 1,
+    season_type == "REG",
+    rusher != 'NA') %>%
+  group_by(rusher) %>%
+  summarise(plays = n(), total_epa = round(sum(epa),1), .groups = "drop") %>%
+  arrange(-plays) %>%
+  filter(plays > 50) 
 
 
-
+ggplot(data = rushers, aes(plays, total_epa, label = rusher)) +
+  geom_point() +
+  geom_text(aes(label =  rusher),vjust = -.5,check_overlap = TRUE,size = 3) +
+  geom_smooth(method = "lm", se = FALSE)+
+  ggtitle("2021 Rushers by number of plays and total EPA")+
+  theme_classic()
+  
 
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
  data %>%
-  filter(posteam == "KC", pass == 1 ) %>%
-  group_by(receiver) %>%
+  filter(posteam == "KC", 
+    pass == 1,
+    receiver != 'NA') %>%
+  group_by(receiver, posteam) %>%
   summarise(plays = n(), mean_epa = round(mean(epa),3), total_epa = round(sum(epa),1), mean_yards = round(mean(yards_gained),1), series_success = round(mean(series_success),2), .groups = "drop") %>%
   arrange(-plays) %>%
   filter(plays > 20) %>%
   gt() %>%
   gt_theme_espn() %>%
-  tab_header(title = "2021 KC Receivers usage and efficiency")
+  tab_header(title = "2021 Receivers usage and efficiency")
+
+receivers <- data %>%
+  filter(#posteam == "KC", 
+    pass == 1,
+    season_type == "REG",
+    receiver != 'NA') %>%
+  group_by(receiver) %>%
+  summarise(plays = n(), total_epa = round(sum(epa),1), .groups = "drop") %>%
+  arrange(-plays) %>%
+  filter(plays > 50) 
+
+ggplot(data = receivers, aes(plays, total_epa, label = receiver)) +
+  geom_point() +
+  geom_text(aes(label =  receiver),vjust = -.5,check_overlap = TRUE,size = 3) +
+  geom_smooth(method = "lm", se = FALSE)+
+  ggtitle("2021 Recievers by number of plays and total EPA")+
+  theme_classic()
+  
 
 ```
 
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 
  data %>%
   filter(pass == 1, is.na(yards_gained) == FALSE, is.na(epa) == FALSE, season_type == "REG") %>%
   group_by(passer) %>%
-  summarise( plays = n(), mean_epa = round(mean(epa),3), mean_yards = round(mean(yards_gained),1), .groups = "drop") %>%
+  summarise( plays = n(), mean_epa = round(mean(epa),3), total_epa = round(sum(epa),1), mean_yards = round(mean(yards_gained),1), .groups = "drop") %>%
   arrange(-plays) %>%
   filter(plays > 100) %>%
   gt() %>%
   gt_theme_espn() %>%
   tab_header(title = "2021 Regular Season Qbs usage and efficiency")
+
+
+qbs <- data %>%
+  filter(pass == 1, 
+         season_type == "REG") %>%
+  group_by(passer) %>%
+  summarise(plays = n(), total_epa = round(sum(epa),1), .groups = "drop") %>%
+  arrange(-plays) %>%
+  filter(plays > 100) 
+
+ggplot(data = qbs, aes(plays, total_epa, label = passer)) +
+  geom_point() +
+  geom_text(aes(label =  passer),vjust = -.5,check_overlap = TRUE,size = 3) +
+  geom_smooth(method = "lm", se = FALSE)+
+  ggtitle("2021 QBs by number of plays and total EPA")+
+  theme_classic()
+  
 
 
 ```
